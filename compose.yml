@@ -1,0 +1,37 @@
+services:
+  app:
+    build: .
+    environment:
+      - PORT=4000
+      - PHX_HOST=${PHX_HOST:?}
+      - SECRET_KEY_BASE=${SECRET_KEY_BASE:?}
+      - TOKEN_SIGNING_SECRET=${TOKEN_SIGNING_SECRET:?}
+      - DATABASE_URL=ecto://${POSTGRES_USER:-fleetms}:${POSTGRES_PASSWORD:?}@db:5432/${POSTGRES_DB:-fleetms}
+      - SWOOSH_ADAPTER=${SWOOSH_ADAPTER:-Swoosh.Adapters.Local}
+      - MAILER_API_KEY=${MAILER_API_KEY:-}
+      - MAILER_DOMAIN=${MAILER_DOMAIN:-}
+    command: sh -c "/app/bin/migrate && /app/bin/server"
+    expose:
+      - "4000"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: always
+
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-fleetms}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?}
+      - POSTGRES_DB=${POSTGRES_DB:-fleetms}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: always
+
+volumes:
+  pgdata:
