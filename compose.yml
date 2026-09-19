@@ -13,4 +13,14 @@ services:
     command: sh -c "/app/bin/migrate && /app/bin/server"
     expose:
       - "4000"
+    networks:
+      - default
+      - dbnet
     restart: always
+
+networks:
+  # Red donde vive la base de datos de Coolify. Por defecto se llama "coolify".
+  # Si la tuya se llama distinto, define DB_NETWORK en las variables de Coolify.
+  dbnet:
+    external: true
+    name: ${DB_NETWORK:-coolify}
